@@ -73,10 +73,10 @@ export function Model(event?: string, options: (PropOptions | Constructor[] | Co
 export function Prop(options: (PropOptions | Constructor[] | Constructor)): PropertyDecorator {
   if (options instanceof Vue) {
     const def = {};
-    createDecorator((componentOptions, k) => {
+    return createDecorator((componentOptions, k) => {
       (componentOptions.props || (componentOptions.props = {}) as any)[k] = def;
-    }).apply(this, [...arguments]);
-    return;
+    })
+      .apply(this, [...arguments]);
   }
   
   return createDecorator((componentOptions, k) => {
