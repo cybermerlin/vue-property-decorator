@@ -1,4 +1,4 @@
-/** vue-property-decorator verson 7.1.1 MIT LICENSE copyright 2018 kaorun343 */
+/** vue-property-decorator verson 7.2.0 MIT LICENSE copyright 2018 kaorun343 */
 
 'use strict'
 import Vue, { PropOptions, WatchOptions } from 'vue'
@@ -111,13 +111,28 @@ const hyphenate = (str: string) => str.replace(hyphenateRE, '-$1').toLowerCase()
  * @return MethodDecorator
  */
 export function Emit(event?: string): MethodDecorator {
-  return function (target: Vue, key: string, descriptor: any) {
+  return function (_target: Vue, key: string, descriptor: any) {
     key = hyphenate(key)
     const original = descriptor.value
     descriptor.value = function emitter(...args: any[]) {
+      const emit = (returnValue: any) => {
+        if (returnValue !== undefined) args.unshift(returnValue)
+        this.$emit(event || key, ...args)
+      }
+
       const returnValue: any = original.apply(this, args)
-      if (returnValue !== undefined) args.unshift(returnValue)
-      this.$emit(event || key, ...args)
+
+      if (isPromise(returnValue)) {
+        returnValue.then(returnValue => {
+          emit(returnValue)
+        })
+      } else {
+        emit(returnValue)
+      }
     }
   }
+}
+
+function isPromise(obj: any): obj is Promise<any> {
+  return obj instanceof Promise || (obj && typeof obj.then === 'function')
 }
